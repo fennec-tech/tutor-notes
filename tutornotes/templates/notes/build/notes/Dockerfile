@@ -1,11 +1,19 @@
 FROM docker.io/ubuntu:20.04
 MAINTAINER Overhang.io <contact@overhang.io>
 
+{% if APT_PROXY -%}
+RUN echo 'Acquire::{{ APT_PROXY | url_part('scheme') }}::Proxy "{{ APT_PROXY }}";' \
+    > /etc/apt/apt.conf.d/00proxy 
+{%- endif %}
 RUN apt update && \
   apt upgrade -y && \
   # python 3.8
   apt install -y language-pack-en git python3 python3-pip python3-venv libmysqlclient-dev
+{% if APT_PROXY -%}
+RUN rm /etc/apt/apt.conf.d/00proxy
+{%- endif %}
 RUN ln -s /usr/bin/python3 /usr/bin/python
+
 
 ARG APP_USER_ID=1000
 RUN useradd --home-dir /app --create-home --shell /bin/bash --uid ${APP_USER_ID} app
